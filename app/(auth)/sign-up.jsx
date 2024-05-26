@@ -1,18 +1,38 @@
 import React, { useState } from "react";
-import { ScrollView, Text, View, Image } from "react-native";
+import { ScrollView, Text, View, Image, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { images } from "../../constants";
 import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
+import { createUsers } from "../../lib/appwrite";
 const SignUp = () => {
-  const [form, setForm] = useState({ username:'', email: "", password: "" });
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const submit = (e)=>{
-    e.preventDefault();
+  const [form, setForm] = useState({ username: "", email: "", password: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    console.log(e)
-  }
+
+  const submit = async () => {
+    if (!form.email === "" || !form.password === "" || !form.username === "")
+      return Alert.alert("Error", "All fields are required");
+    setIsSubmitting(true);
+    try {
+      const result = await createUsers(
+        form.email,
+        form.password,
+        form.username
+      );
+      // set to global state using useContext
+
+      if (!result) throw new Error("Error creating account");
+      router.replace("/home");
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+
+    console.log(e);
+  };
 
   return (
     <SafeAreaView className="bg-primary h-full ">
@@ -29,12 +49,10 @@ const SignUp = () => {
 
           <FormField
             title="Username"
-            value={form.email}
+            value={form.username}
             handleChangeText={(e) => setForm({ ...form, username: e })}
             otherStyles="mt-10"
-
           />
-
 
           <FormField
             title="Email"
@@ -50,12 +68,24 @@ const SignUp = () => {
             otherStyles="mt-6"
           />
 
-          <CustomButton title={"Sign Up"} handlePress={submit} containerStyles="mt-7" isLoading={isSubmitting}/>
+          <CustomButton
+            title={"Sign Up"}
+            handlePress={submit}
+            containerStyles="mt-7"
+            isLoading={isSubmitting}
+          />
 
           <View className="justify-center pt-5 flex-row gap-2">
-          <Text className="text-lg text-gray-100 font-pregular">have an account already ?</Text>
+            <Text className="text-lg text-gray-100 font-pregular">
+              have an account already ?
+            </Text>
 
-          <Link href={"/sign-in"} className="text-lg font-psemibold text-secondary-100">Sign In</Link>
+            <Link
+              href={"/sign-in"}
+              className="text-lg font-psemibold text-secondary-100"
+            >
+              Sign In
+            </Link>
           </View>
         </View>
       </ScrollView>
